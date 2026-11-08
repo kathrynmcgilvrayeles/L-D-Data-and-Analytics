@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L&D Data & Analytics | AI Generalist Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --brand-dark: #1f2a52;
+            --brand-teal: #00bec7;
+            --brand-light-teal: #d2f0f0;
+            --brand-grey: #abb5bf;
+            --brand-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--brand-white);
+            color: var(--brand-dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--brand-grey); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--brand-dark); }
+
+        header {
+            background-color: var(--brand-dark);
+            color: var(--brand-white);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            padding-top: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border-left: 4px solid transparent;
+            color: var(--brand-dark);
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background-color: var(--brand-light-teal);
+        }
+
+        .nav-item.active {
+            background-color: var(--brand-light-teal);
+            border-left-color: var(--brand-teal);
+            color: var(--brand-dark);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand-teal) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(31, 42, 82, 0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+        
+        .prompt-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border: 2px solid var(--brand-grey);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+        .prompt-textarea:focus { outline: none; border-color: var(--brand-teal); box-shadow: 0 0 0 3px var(--brand-light-teal); }
+
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+            .app-container {
+                flex-direction: column;
+                overflow: visible;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-top: 0;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .nav-item {
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 4px solid transparent;
+                padding: 0.75rem 1rem;
+            }
+            .nav-item.active {
+                border-left-color: transparent;
+                border-bottom-color: var(--brand-teal);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="flex justify-between items-center py-4 px-6">
+    <div>
+        <div class="inline-block px-2.5 py-0.5 mb-1 text-xs font-semibold tracking-wider uppercase rounded-full bg-[#00bec7] bg-opacity-20 text-[#d2f0f0] border border-[#00bec7] border-opacity-30">
+            AI Generalist for L&D Professionals
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">L&D Data & Analytics</h1>
+        <p class="text-sm opacity-90 mt-0.5">Transforming raw learning metrics into strategic organisational insights</p>
+    </div>
+    <div class="text-[#00bec7] text-3xl hidden sm:block">
+        <i class="fa-solid fa-chart-line"></i>
+    </div>
+</header>
+
+<div class="app-container">
+    <nav class="sidebar">
+        <div class="nav-item active" onclick="switchTab('lexicon')">
+            <i class="fa-solid fa-language mr-3 w-5 text-center"></i> AI Lexicon
+        </div>
+        <div class="nav-item" onclick="switchTab('ld-data')">
+            <i class="fa-solid fa-database mr-3 w-5 text-center"></i> L&D Data Ecosystem
+        </div>
+        <div class="nav-item" onclick="switchTab('formulas')">
+            <i class="fa-solid fa-calculator mr-3 w-5 text-center"></i> Core Formulas
+        </div>
+        <div class="nav-item" onclick="switchTab('prompts')">
+            <i class="fa-solid fa-terminal mr-3 w-5 text-center"></i> PARTS Builder
+        </div>
+        <div class="nav-item" onclick="switchTab('use-cases')">
+            <i class="fa-solid fa-lightbulb mr-3 w-5 text-center"></i> L&D Use Cases
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Tab 1: AI Lexicon -->
+        <div id="lexicon" class="tab-pane active">
+            <h2 class="text-2xl font-bold mb-2 gradient-text">L&D AI Data Lexicon</h2>
+            <p class="mb-5 text-gray-700 text-base leading-relaxed">
+                Use these analytical terms and action verbs in your prompts to direct Generative AI to evaluate learning and performance data with precision.
+            </p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="data-card">
+                    <h3 class="text-lg font-bold mb-3 text-[#1f2a52] border-b pb-2">
+                        <i class="fa-solid fa-comment-dots mr-2 text-[#00bec7]"></i> High-Impact Analytical Verbs
+                    </h3>
+                    <ul class="space-y-4">
+                        <li>
+                            <strong class="text-[#00bec7] text-base">"Correlate..."</strong>
+                            <p class="text-sm text-gray-700 mt-1 leading-relaxed">Identifies the relationship between two or more variables (e.g., <em>"Does completion of the consultative selling pathway correlate with higher quarterly client retention?"</em>).</p>
+                        </li>
+                        <li>
+                            <strong class="text-[#00bec7] text-base">"Identify outliers..."</strong>
+                            <p class="text-sm text-gray-700 mt-1 leading-relaxed">Highlights data points that deviate significantly from the norm (e.g., <em>"Which business units have unusually high drop-off rates in Module 3 of the onboarding programme?"</em>).</p>
+                        </li>
+                        <li>
+                            <strong class="text-[#00bec7] text-base">"Synthesise the trend..."</strong>
+                            <p class="text-sm text-gray-700 mt-1 leading-relaxed">Extracts the overarching trajectory or pattern across longitudinal data (e.g., capability assessment growth over 12 months).</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="data-card flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold mb-3 text-[#1f2a52] border-b pb-2">
+                            <i class="fa-solid fa-tags mr-2 text-[#00bec7]"></i> Essential Data Terminology
+                        </h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Dataset</span>
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Variable</span>
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Qualitative Sentiment</span>
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Quantitative Metrics</span>
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Cohort Analysis</span>
+                            <span class="px-3 py-1 bg-[#f1f5f9] border border-[#abb5bf] rounded text-sm font-semibold text-[#1f2a52]">Leading vs Lagging Indicators</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-[#d2f0f0] p-4 rounded-lg text-sm text-[#1f2a52] leading-relaxed border border-[#00bec7] border-opacity-30">
+                        <p><strong>Pro Tip:</strong> Always anchor the AI in what the dataset represents before asking for analysis. Instead of prompting <em>"Analyse this spreadsheet,"</em> specify: <em>"Analyse this Q1 LMS engagement and capability assessment dataset for our emerging leaders cohort."</em> Context drives accuracy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: L&D Data Ecosystem -->
+        <div id="ld-data" class="tab-pane">
+            <h2 class="text-2xl font-bold mb-2 gradient-text">The L&D Data Ecosystem</h2>
+            <p class="mb-6 text-gray-700 text-base leading-relaxed">
+                You don’t need a background in data science to uncover meaningful capability insights. Using natural language, you can direct Generative AI to act as your dedicated learning analyst—connecting everyday L&D metrics to tangible organisational outcomes.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                <div class="bg-white border border-[#e2e8f0] p-5 rounded-lg shadow-sm hover:border-[#00bec7] transition-colors">
+                    <div class="flex items-center gap-3 mb-3 text-[#1f2a52] border-b pb-2">
+                        <i class="fa-solid fa-graduation-cap text-[#00bec7] text-xl"></i>
+                        <h3 class="font-bold text-lg">Learning Engagement</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Foundational activity and attainment metrics exported from your LMS or LXP.</p>
+                    <ul class="text-sm space-y-1.5 text-gray-700">
+                        <li>• Pathway completion & drop-off rates</li>
+                        <li>• Formative & summative assessment scores</li>
+                        <li>• Time-to-proficiency benchmarks</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white border border-[#e2e8f0] p-5 rounded-lg shadow-sm hover:border-[#00bec7] transition-colors">
+                    <div class="flex items-center gap-3 mb-3 text-[#1f2a52] border-b pb-2">
+                        <i class="fa-solid fa-briefcase text-[#00bec7] text-xl"></i>
+                        <h3 class="font-bold text-lg">Organisational Impact</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Operational and HR data used to demonstrate learning transfer and ROI.</p>
+                    <ul class="text-sm space-y-1.5 text-gray-700">
+                        <li>• Quality assurance & compliance incident logs</li>
+                        <li>• Client satisfaction (CSAT) & NPS trends</li>
+                        <li>• Internal mobility & 90-day retention rates</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white border border-[#e2e8f0] p-5 rounded-lg shadow-sm hover:border-[#00bec7] transition-colors">
+                    <div class="flex items-center gap-3 mb-3 text-[#1f2a52] border-b pb-2">
+                        <i class="fa-solid fa-comments text-[#00bec7] text-xl"></i>
+                        <h3 class="font-bold text-lg">Qualitative Sentiment</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">The human context that explains the 'why' behind your quantitative metrics.</p>
+                    <ul class="text-sm space-y-1.5 text-gray-700">
+                        <li>• Post-programme evaluation surveys</li>
+                        <li>• 360-degree feedback & coaching notes</li>
+                        <li>• Stakeholder & focus group transcripts</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-[#f8fafc] border border-[#e2e8f0] p-5 rounded-lg mb-8 shadow-sm">
+                <h3 class="text-lg font-bold mb-2 text-[#1f2a52]">
+                    <i class="fa-solid fa-microphone-lines text-[#00bec7] mr-2"></i> Natural Language is Your Analytical Superpower
+                </h3>
+                <p class="text-gray-700 text-base mb-4 leading-relaxed">
+                    Instead of spending hours wrestling with complex lookup formulas, pivot tables, or inconsistent text formatting, you can upload de-identified datasets to your approved AI tool and instruct it to clean, merge, and interrogate the data for you.
+                </p>
+                <div class="bg-white p-4 rounded border-l-4 border-[#00bec7] shadow-sm">
+                    <p class="italic text-gray-700 text-base">
+                        "I have uploaded two de-identified spreadsheets: one containing Q3 cybersecurity training completion records and another logging Q3 phishing simulation click rates by business unit. Cross-reference the data by department, standardise any inconsistent naming conventions, and determine whether teams with higher completion rates had fewer simulation breaches."
+                    </p>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-xl font-bold mb-3 text-[#1f2a52] border-b pb-2">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2 text-[#00bec7]"></i> See the Transformation
+                </h3>
+                <p class="mb-4 text-gray-700 text-base">
+                    Toggle below to see how Generative AI can transform an unstructured, messy LMS export into a board-ready executive summary simply by applying a structured prompt.
+                </p>
+                
+                <div class="border border-[#abb5bf] rounded-lg overflow-hidden shadow-sm">
+                    <div class="flex border-b border-[#abb5bf] bg-gray-50">
+                        <button id="btn-raw" class="flex-1 py-3 text-base font-bold bg-white text-[#1f2a52] transition-colors focus:outline-none" onclick="toggleData('raw')">Raw LMS Export (Unstructured)</button>
+                        <button id="btn-clean" class="flex-1 py-3 text-base font-bold bg-[#d2f0f0] text-gray-500 hover:text-[#1f2a52] transition-colors focus:outline-none" onclick="toggleData('clean')">Gen AI Executive Insight Report</button>
+                    </div>
+                    
+                    <div id="table-raw" class="p-5 overflow-x-auto bg-white block">
+                        <table class="w-full text-sm text-left border-collapse">
+                            <thead class="text-gray-500 border-b-2 border-gray-200 bg-gray-50">
+                                <tr><th class="py-2 px-2">usr_id</th><th class="py-2 px-2">org_unit_cd</th><th class="py-2 px-2">mod_id_str</th><th class="py-2 px-2">assmt_pct</th><th class="py-2 px-2">dt_cmp</th></tr>
+                            </thead>
+                            <tbody class="text-gray-600 font-mono text-xs">
+                                <tr class="border-b border-gray-100"><td class="py-2 px-2">1094</td><td class="py-2 px-2"> ops_nsw_01 </td><td class="py-2 px-2">Cyber_Sec_101</td><td class="py-2 px-2">65</td><td class="py-2 px-2">12/04/25</td></tr>
+                                <tr class="border-b border-gray-100"><td class="py-2 px-2">1095</td><td class="py-2 px-2">FIN_CORP_VIC</td><td class="py-2 px-2">Cyber_Sec_101</td><td class="py-2 px-2">95</td><td class="py-2 px-2">04-12-2025</td></tr>
+                                <tr class="border-b border-gray-100"><td class="py-2 px-2">1096</td><td class="py-2 px-2"> ops_nsw_01</td><td class="py-2 px-2">Cyber_Sec_101</td><td class="py-2 px-2">55</td><td class="py-2 px-2">13/04/25</td></tr>
+                                <tr class="border-b border-gray-100"><td class="py-2 px-2">1097</td><td class="py-2 px-2"> cs_qld_04</td><td class="py-2 px-2">Cyber_Sec_101</td><td class="py-2 px-2">88</td><td class="py-2 px-2">April 15</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-sm text-gray-500 mt-4 italic">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Cryptic column headers, inconsistent date formats, and unstandardised business unit codes make manual analysis slow and error-prone.
+                        </p>
+                    </div>
+
+                    <div id="table-clean" class="p-5 bg-white hidden">
+                        <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
+                            <h4 class="font-bold text-[#1f2a52] text-lg mb-2">
+                                <i class="fa-solid fa-robot text-[#00bec7] mr-2"></i> Cybersecurity Foundations: Q2 Capability Summary
+                            </h4>
+                            <p class="text-base text-gray-700 mb-3">Based on the cleansed LMS dataset, here are the key performance patterns across business units:</p>
+                            <ul class="list-disc pl-5 space-y-2 text-base text-gray-800">
+                                <li><strong>Highest Attainment:</strong> Corporate Finance VIC (Average assessment score: 95%)</li>
+                                <li><strong>Priority Focus Area:</strong> Field Operations NSW (Average assessment score: 60%)</li>
+                                <li><strong class="text-[#00bec7]">Behavioural Pattern:</strong> Field Operations completions cluster tightly within a 48-hour window in mid-April, indicating a last-minute compliance push rather than spaced learning engagement.</li>
+                            </ul>
+                            <div class="mt-4 p-3 bg-[#d2f0f0] rounded text-sm text-[#1f2a52] font-semibold">
+                                L&D Recommendation: Redesign the assessment scenarios in Cybersecurity Foundations to reflect mobile, field-based workflows, as current desktop-centric examples are resulting in lower comprehension for operational staff.
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-4 italic">
+                            <span class="font-bold text-[#00bec7]"><i class="fa-solid fa-check-circle mr-1"></i> Prompt Applied:</span> "Standardise the department codes and dates, group completions by business unit, identify the highest and lowest average assessment scores, and recommend a targeted instructional design intervention."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Core Formulas -->
+        <div id="formulas" class="tab-pane">
+            <h2 class="text-2xl font-bold mb-2 gradient-text">Foundational Spreadsheet Functions & AI</h2>
+            <p class="mb-6 text-gray-700 text-base leading-relaxed">
+                Before feeding data into Generative AI—or when verifying AI-generated outputs—it helps to understand how core spreadsheet functions aggregate learning metrics. <strong>COUNTIF</strong> and <strong>SUMIF</strong> are essential building blocks for summarising raw LMS spreadsheets.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- COUNTIF Section -->
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative flex flex-col justify-between">
+                    <div>
+                        <div class="absolute top-0 left-0 w-full h-1 bg-[#00bec7] rounded-t-lg"></div>
+                        <h3 class="text-xl font-bold mb-3 text-[#1f2a52]"><i class="fa-solid fa-hashtag mr-2 text-[#00bec7]"></i> COUNTIF</h3>
+                        <p class="text-gray-700 text-base leading-relaxed mb-4">
+                            The <strong>COUNTIF</strong> function tallies how many times a specific value or text string appears in a dataset based on a single criterion. In L&D, this is ideal for counting how many participants have a status of <em>"Completed"</em>, how many learners selected a specific distractor in a multiple-choice quiz, or how many times a department appears in an attendance log.
+                        </p>
+                    </div>
+                    <button onclick="openModal('modal-initial')" class="bg-white border-2 border-[#1f2a52] text-[#1f2a52] hover:bg-[#1f2a52] hover:text-white font-bold py-2.5 px-4 rounded transition-colors w-full flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> View Initial Aggregation Prompt
+                    </button>
+                </div>
+
+                <!-- SUMIF Section -->
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative flex flex-col justify-between">
+                    <div>
+                        <div class="absolute top-0 left-0 w-full h-1 bg-[#1f2a52] rounded-t-lg"></div>
+                        <h3 class="text-xl font-bold mb-3 text-[#1f2a52]"><i class="fa-solid fa-plus mr-2 text-[#00bec7]"></i> SUMIF</h3>
+                        <p class="text-gray-700 text-base leading-relaxed mb-4">
+                            The <strong>SUMIF</strong> function totals numerical values across a range based on a specified criterion. For example, you can calculate the total CPD hours logged by a specific business unit, or compare total formative versus summative assessment points earned across a cohort. Because SUMIF evaluates one criterion at a time, you can ask AI to write nested formulas (like <strong>SUMIFS</strong>) when filtering by multiple variables.
+                        </p>
+                    </div>
+                    <button onclick="openModal('modal-insights')" class="bg-white border-2 border-[#1f2a52] text-[#1f2a52] hover:bg-[#1f2a52] hover:text-white font-bold py-2.5 px-4 rounded transition-colors w-full flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-lightbulb"></i> View Deeper Insights Prompt
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-[#f8fafc] border border-[#e2e8f0] p-5 rounded-lg mb-6 shadow-sm">
+                <p class="text-lg text-[#1f2a52] font-semibold mb-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[#00bec7] mr-2"></i> 
+                    Moving from Calculation to Diagnostic Insight
+                </p>
+                <p class="text-gray-700 text-base leading-relaxed mb-3">
+                    Once you—or the AI—have aggregated your baseline metrics using COUNTIF and SUMIF logic, the real value comes from asking Generative AI to interpret the patterns behind the numbers.
+                </p>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Click the buttons above to copy ready-to-use prompts that guide the AI from basic tabular aggregation to strategic instructional design recommendations. Always remember to specify your preferred output format (e.g., <em>"Present as a structured Markdown table"</em>).
+                </p>
+            </div>
+        </div>
+
+        <!-- Tab 4: PARTS Prompt Builder -->
+        <div id="prompts" class="tab-pane">
+            <h2 class="text-2xl font-bold mb-1 gradient-text">The PARTS Prompting Framework</h2>
+            <p class="mb-5 text-gray-600 text-base">
+                Structure robust, repeatable data analysis prompts using the <strong>PARTS</strong> model. Complete the fields below to dynamically assemble your custom L&D prompt.
+            </p>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <div class="lg:w-1/2 space-y-4">
+                    <div class="bg-white p-3.5 rounded shadow-sm border-l-4 border-[#1f2a52] flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <div class="flex items-center gap-2 sm:w-1/4">
+                            <h3 class="font-bold text-base"><span class="text-[#00bec7]">P</span>ersona</h3>
+                        </div>
+                        <input type="text" id="inputP" class="parts-input flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#00bec7] focus:ring-1 focus:ring-[#00bec7]" placeholder="e.g., People Analytics & L&D Specialist" oninput="updatePrompt()">
+                    </div>
+                    <div class="bg-white p-3.5 rounded shadow-sm border-l-4 border-[#1f2a52] flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <div class="flex items-center gap-2 sm:w-1/4">
+                            <h3 class="font-bold text-base"><span class="text-[#00bec7]">A</span>ction</h3>
+                        </div>
+                        <input type="text" id="inputA" class="parts-input flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#00bec7] focus:ring-1 focus:ring-[#00bec7]" placeholder="e.g., Analyse the Q2 onboarding completion and 90-day retention data" oninput="updatePrompt()">
+                    </div>
+                    <div class="bg-white p-3.5 rounded shadow-sm border-l-4 border-[#1f2a52] flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <div class="flex items-center gap-2 sm:w-1/4">
+                            <h3 class="font-bold text-base"><span class="text-[#00bec7]">R</span>eason</h3>
+                        </div>
+                        <input type="text" id="inputR" class="parts-input flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#00bec7] focus:ring-1 focus:ring-[#00bec7]" placeholder="e.g., Identify capability bottlenecks and improve time-to-proficiency" oninput="updatePrompt()">
+                    </div>
+                    <div class="bg-white p-3.5 rounded shadow-sm border-l-4 border-[#1f2a52] flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <div class="flex items-center gap-2 sm:w-1/4">
+                            <h3 class="font-bold text-base"><span class="text-[#00bec7]">T</span>one</h3>
+                        </div>
+                        <input type="text" id="inputT" class="parts-input flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#00bec7] focus:ring-1 focus:ring-[#00bec7]" placeholder="e.g., Objective, evidence-based, and consultative" oninput="updatePrompt()">
+                    </div>
+                    <div class="bg-white p-3.5 rounded shadow-sm border-l-4 border-[#1f2a52] flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <div class="flex items-center gap-2 sm:w-1/4">
+                            <h3 class="font-bold text-base"><span class="text-[#00bec7]">S</span>tructure</h3>
+                        </div>
+                        <input type="text" id="inputS" class="parts-input flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#00bec7] focus:ring-1 focus:ring-[#00bec7]" placeholder="e.g., Summary table followed by 3 prioritised recommendations" oninput="updatePrompt()">
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 bg-[#f8fafc] p-4 md:p-5 rounded-lg border border-[#e2e8f0] flex flex-col">
+                    <h3 class="font-bold text-lg mb-3 text-[#1f2a52]"><i class="fa-solid fa-flask mr-2 text-[#00bec7]"></i> Your Assembled Prompt</h3>
+                    <textarea id="promptSandbox" class="prompt-textarea text-base flex-grow mb-4 leading-relaxed bg-white" readonly placeholder="Your assembled prompt will appear here as you type..."></textarea>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">Uses Australian English conventions by default.</span>
+                        <button onclick="copyPartsPrompt()" id="btn-copy-parts" class="bg-[#00bec7] hover:bg-[#1f2a52] text-white px-4 py-2 rounded transition-colors text-sm font-semibold flex items-center gap-2">
+                            <i class="fa-regular fa-copy"></i> Copy Prompt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: L&D Use Cases -->
+        <div id="use-cases" class="tab-pane">
+            <h2 class="text-2xl font-bold mb-2 gradient-text">Practical L&D Data Use Cases</h2>
+            <p class="mb-5 text-gray-700 text-base leading-relaxed">
+                Explore how L&D professionals across industries use natural language prompts to turn everyday learning and operational data into strategic business insights.
+            </p>
+            
+            <div class="space-y-5">
+                <div class="bg-white border border-[#abb5bf] rounded-lg p-5 hover:border-[#00bec7] transition-colors shadow-sm">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-[#d2f0f0] p-2.5 rounded-full text-[#1f2a52]"><i class="fa-solid fa-shield-halved text-lg w-5 text-center"></i></div>
+                        <h3 class="text-lg font-bold text-[#1f2a52]">1. Linking Learning to Risk & Quality Outcomes</h3>
+                    </div>
+                    <p class="mb-3 text-gray-700 text-base"><strong>Scenario:</strong> Evaluating whether completion of a refreshed compliance or quality assurance module correlates with a reduction in operational errors or WHS incidents.</p>
+                    <div class="bg-gray-50 p-4 rounded text-sm font-mono text-gray-800 border-l-4 border-[#00bec7] leading-relaxed">
+                        "Analyse the attached Q2 WHS capability completion dataset alongside the quarterly workplace incident log. Correlate module completion rates and assessment scores with incident frequency across business units. Present the findings in a summary table and highlight any departments where high completion is not translating to safer workplace behaviour."
+                    </div>
+                </div>
+
+                <div class="bg-white border border-[#abb5bf] rounded-lg p-5 hover:border-[#00bec7] transition-colors shadow-sm">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-[#d2f0f0] p-2.5 rounded-full text-[#1f2a52]"><i class="fa-solid fa-gauge-high text-lg w-5 text-center"></i></div>
+                        <h3 class="text-lg font-bold text-[#1f2a52]">2. Accelerating Onboarding Time-to-Proficiency</h3>
+                    </div>
+                    <p class="mb-3 text-gray-700 text-base"><strong>Scenario:</strong> Measuring how quickly new starters transition from onboarding completion to meeting core role KPIs across different hybrid and regional cohorts.</p>
+                    <div class="bg-gray-50 p-4 rounded text-sm font-mono text-gray-800 border-l-4 border-[#00bec7] leading-relaxed">
+                        "Compare the onboarding cohort start dates with the dates new starters first achieved their baseline performance KPIs in this spreadsheet. Calculate the average time-to-proficiency across different functions and delivery modes (in-person vs virtual), and identify any statistically significant outliers."
+                    </div>
+                </div>
+
+                <div class="bg-white border border-[#abb5bf] rounded-lg p-5 hover:border-[#00bec7] transition-colors shadow-sm">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-[#d2f0f0] p-2.5 rounded-full text-[#1f2a52]"><i class="fa-solid fa-comments text-lg w-5 text-center"></i></div>
+                        <h3 class="text-lg font-bold text-[#1f2a52]">3. Thematic Synthesis of Qualitative Evaluations</h3>
+                    </div>
+                    <p class="mb-3 text-gray-700 text-base"><strong>Scenario:</strong> Extracting actionable instructional design improvements from hundreds of open-text post-programme survey responses.</p>
+                    <div class="bg-gray-50 p-4 rounded text-sm font-mono text-gray-800 border-l-4 border-[#00bec7] leading-relaxed">
+                        "Review the attached spreadsheet containing 450 open-text participant evaluations from our Leadership Foundations programme. Conduct a thematic sentiment analysis, grouping feedback into 'Key Enablers of Learning Transfer' and 'Barriers to Application'. Provide a percentage breakdown by theme and include two representative participant quotes for each."
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal 1: Initial Aggregation Prompt -->
+<div id="modal-initial" class="modal-overlay">
+    <div class="modal-box">
+        <button onclick="closeModal('modal-initial')" class="absolute top-4 right-4 text-gray-500 hover:text-[#1f2a52] transition-colors" aria-label="Close modal">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-xl font-bold text-[#1f2a52] mb-4">Step 1: Initial Data Aggregation Prompt (COUNTIF / SUMIF)</h3>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-5 relative">
+            <textarea id="text-initial" class="w-full bg-transparent resize-none focus:outline-none text-gray-700 text-base leading-relaxed" rows="6" readonly>Act as a Learning Data Analyst. Analyse the attached LMS dataset using COUNTIF logic to tally total module completions, high assessment attainment (>85%), on-time submissions, and social learning participation by business unit. Next, apply SUMIF logic to calculate total assessment points, formative versus summative scores, and total learning hours logged by high-performing cohorts. Present the results in a clean, structured table using Australian English.</textarea>
+        </div>
+        <div class="flex justify-end">
+            <button id="btn-copy-initial" onclick="copyModalText('text-initial', 'btn-copy-initial')" class="bg-[#00bec7] hover:bg-[#1f2a52] text-white font-bold py-2 px-5 rounded transition-colors flex items-center gap-2">
+                <i class="fa-regular fa-copy"></i> Copy Prompt
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Gen AI Insights Prompt -->
+<div id="modal-insights" class="modal-overlay">
+    <div class="modal-box">
+        <button onclick="closeModal('modal-insights')" class="absolute top-4 right-4 text-gray-500 hover:text-[#1f2a52] transition-colors" aria-label="Close modal">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-xl font-bold text-[#1f2a52] mb-4">Step 2: Diagnostic L&D Insights Prompt</h3>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-5 relative">
+            <textarea id="text-insights" class="w-full bg-transparent resize-none focus:outline-none text-gray-700 text-base leading-relaxed" rows="6" readonly>Building on the COUNTIF and SUMIF aggregation above, identify key patterns across completion rates and assessment scores. Provide plausible adult learning explanations for any performance gaps, and generate three actionable L&D recommendations. Include targeted instructional design modifications, manager coaching interventions, and diagnostic follow-up questions. Present your findings in a professional executive table using Australian English.</textarea>
+        </div>
+        <div class="flex justify-end">
+            <button id="btn-copy-insights" onclick="copyModalText('text-insights', 'btn-copy-insights')" class="bg-[#00bec7] hover:bg-[#1f2a52] text-white font-bold py-2 px-5 rounded transition-colors flex items-center gap-2">
+                <i class="fa-regular fa-copy"></i> Copy Prompt
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching logic
+    function switchTab(tabId) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+        const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(
+            item => item.getAttribute('onclick').includes(tabId)
+        );
+        if (activeNav) activeNav.classList.add('active');
+
+        const activePane = document.getElementById(tabId);
+        if (activePane) activePane.classList.add('active');
+        
+        document.querySelector('.main-content').scrollTop = 0;
+    }
+
+    // Data table toggle logic for L&D Sandbox
+    function toggleData(state) {
+        const rawTable = document.getElementById('table-raw');
+        const cleanTable = document.getElementById('table-clean');
+        const btnRaw = document.getElementById('btn-raw');
+        const btnClean = document.getElementById('btn-clean');
+
+        if (state === 'raw') {
+            rawTable.classList.remove('hidden');
+            rawTable.classList.add('block');
+            cleanTable.classList.remove('block');
+            cleanTable.classList.add('hidden');
+            
+            btnRaw.classList.add('bg-white', 'text-[#1f2a52]');
+            btnRaw.classList.remove('bg-[#d2f0f0]', 'text-gray-500');
+            
+            btnClean.classList.add('bg-[#d2f0f0]', 'text-gray-500');
+            btnClean.classList.remove('bg-white', 'text-[#1f2a52]');
+        } else {
+            cleanTable.classList.remove('hidden');
+            cleanTable.classList.add('block');
+            rawTable.classList.remove('block');
+            rawTable.classList.add('hidden');
+            
+            btnClean.classList.add('bg-white', 'text-[#1f2a52]');
+            btnClean.classList.remove('bg-[#d2f0f0]', 'text-gray-500');
+            
+            btnRaw.classList.add('bg-[#d2f0f0]', 'text-gray-500');
+            btnRaw.classList.remove('bg-white', 'text-[#1f2a52]');
+        }
+    }
+
+    // Dynamic Prompt Builder Logic (PARTS)
+    function updatePrompt() {
+        const p = document.getElementById('inputP').value.trim();
+        const a = document.getElementById('inputA').value.trim();
+        const r = document.getElementById('inputR').value.trim();
+        const t = document.getElementById('inputT').value.trim();
+        const s = document.getElementById('inputS').value.trim();
+
+        let generatedPrompt = "";
+        
+        if (p) generatedPrompt += `Act as a ${p}.\n`;
+        if (a) generatedPrompt += `${a}\n`;
+        if (r) generatedPrompt += `in order to ${r}.\n`;
+        if (t) generatedPrompt += `Maintain an ${t} tone and use Australian English.\n`;
+        if (s) generatedPrompt += `Format the output as a ${s}.`;
+
+        document.getElementById('promptSandbox').value = generatedPrompt;
+    }
+
+    // Modal Logic
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        
+        // Reset button states when closing
+        const copyBtns = document.querySelectorAll('[id^="btn-copy-"]');
+        copyBtns.forEach(btn => {
+            btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Prompt';
+            btn.classList.remove('bg-[#1f2a52]');
+            btn.classList.add('bg-[#00bec7]');
+        });
+    }
+
+    // Close modal if clicking outside the box
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = "none";
+        }
+    }
+
+    // Copy to clipboard logic for Modals
+    function copyModalText(textAreaId, buttonId) {
+        const textarea = document.getElementById(textAreaId);
+        const copyBtn = document.getElementById(buttonId);
+        
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges();
+
+        // Button feedback
+        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        copyBtn.classList.remove('bg-[#00bec7]');
+        copyBtn.classList.add('bg-[#1f2a52]');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Prompt';
+            copyBtn.classList.remove('bg-[#1f2a52]');
+            copyBtn.classList.add('bg-[#00bec7]');
+        }, 2000);
+    }
+
+    // Copy to clipboard logic for PARTS
+    function copyPartsPrompt() {
+        const textarea = document.getElementById('promptSandbox');
+        const copyBtn = document.getElementById('btn-copy-parts');
+        
+        if (!textarea.value.trim()) return;
+        
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges();
+
+        // Button feedback
+        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        copyBtn.classList.remove('bg-[#00bec7]');
+        copyBtn.classList.add('bg-[#1f2a52]');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Prompt';
+            copyBtn.classList.remove('bg-[#1f2a52]');
+            copyBtn.classList.add('bg-[#00bec7]');
+        }, 2000);
+    }
+    
+    // Initialize empty state on load
+    window.onload = function() {
+        updatePrompt(); 
+    };
+</script>
+
+</body>
+</html>
